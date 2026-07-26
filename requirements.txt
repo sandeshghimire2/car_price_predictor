@@ -1,0 +1,11 @@
+streamlit>=1.60.0
+pandas>=2.2.0
+scikit-learn==1.8.0
+numpy>=2.0.0
+plotly>=5.18.0
+
+# NOTE: scikit-learn is pinned exactly. The included Linearmodelcar.pkl was
+# trained with scikit-learn 1.8.0 — using a different version can raise
+# unpickling errors (attribute/format changes between sklearn releases).
+# If you upgrade scikit-learn, just re-run `python train_model.py` to
+# regenerate a compatible model file.
