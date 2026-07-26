@@ -7,12 +7,23 @@ Run with:
     streamlit run app.py
 """
 
+import os
 import pickle
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
+# --------------------------------------------------------------------------
+# Paths — anchored to this file's own folder, NOT the process's working
+# directory. Streamlit Cloud (and some other launchers) don't guarantee the
+# working directory is the app's folder, which causes FileNotFoundError on
+# relative paths like "data/cleaned_car.csv".
+# --------------------------------------------------------------------------
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(APP_DIR, "Linearmodelcar.pkl")
+DATA_PATH = os.path.join(APP_DIR, "data", "cleaned_car.csv")
 
 # --------------------------------------------------------------------------
 # Page config (must be the first Streamlit command)
@@ -79,13 +90,29 @@ st.markdown(
 # --------------------------------------------------------------------------
 @st.cache_resource
 def load_model():
-    with open("Linearmodelcar.pkl", "rb") as f:
+    if not os.path.exists(MODEL_PATH):
+        st.error(
+            f"Model file not found at `{MODEL_PATH}`. Make sure "
+            "`Linearmodelcar.pkl` was committed to your repository "
+            "(check it isn't excluded by .gitignore or too large for a "
+            "plain git push)."
+        )
+        st.stop()
+    with open(MODEL_PATH, "rb") as f:
         return pickle.load(f)
 
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data/cleaned_car.csv")
+    if not os.path.exists(DATA_PATH):
+        st.error(
+            f"Data file not found at `{DATA_PATH}`. Make sure the `data/` "
+            "folder (with `cleaned_car.csv` inside) was committed to your "
+            "repository — it's easy to accidentally leave a data folder "
+            "out of git."
+        )
+        st.stop()
+    df = pd.read_csv(DATA_PATH)
     if "Unnamed: 0" in df.columns:
         df = df.drop(columns=["Unnamed: 0"])
     return df
@@ -268,19 +295,3 @@ The model was trained on cleaned data derived from `car.csv` — see
 directly from the original `maincode.ipynb` notebook).
 
 **Project structure**
-```
-car_price_predictor/
-├── app.py                # This Streamlit app
-├── train_model.py        # Data cleaning + model training script
-├── Linearmodelcar.pkl    # Trained model (pickled sklearn Pipeline)
-├── requirements.txt      # Python dependencies
-├── data/
-│   ├── car.csv            # Raw dataset
-│   └── cleaned_car.csv    # Cleaned dataset
-└── README.md
-```
-
-**Note:** predictions are statistical estimates from a simple linear model
-and should be treated as a ballpark figure, not an appraisal.
-        """
-    )
